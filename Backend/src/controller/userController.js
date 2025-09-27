@@ -155,7 +155,7 @@ export const getme= async (req, res) => {
         const user = await User.findById(userId).select(
             `fullname dateOfBirth education goal timeAvailability contentPreference
             level preferredLanguage bio profileImageURL socialLinks resumeURL
-            state district interest profileProgress isOnboarded enrolledCourses`
+            state district interest profileProgress isOnboarded enrolledCourses hasTakenOnlineCourses`
         );
 
         console.log("USER OBJECT FROM DATABASE:", user);
