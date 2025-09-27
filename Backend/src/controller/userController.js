@@ -190,6 +190,7 @@ export const getme= async (req, res) => {
                     percentage: user.profileProgress?.percentage || 0,
                 },
                 isOnboarded: user.isOnboarded || false,
+                hasTakenOnlineCourses: user.hasTakenOnlineCourses || false,
                
             }
         });
