@@ -3,7 +3,7 @@ import Enrollment from '../models/enrollmentModel.js';
 import Course from '../models/courseModel.js';
 
 // Don't forget to import your new model at the top of the file
-import UserProgress from '../models/UserProgressModel.js'; 
+import UserProgress from '../models/UserProgressModel.js';
 // import Enrollment from '../models/Enrollment.js';
 
 export const getMyLearning = async (req, res) => {
@@ -15,7 +15,7 @@ export const getMyLearning = async (req, res) => {
       .populate({
         path: 'course',
         select: 'title thumbnailURL modules instructor',
-        populate: { 
+        populate: {
           path: 'instructor',
           select: 'fullname'
         }
@@ -36,14 +36,14 @@ export const getMyLearning = async (req, res) => {
           user: userId,
           course: course._id,
         });
-        
+
         // 4. Calculate total number of lessons in the course
         const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0);
 
         // 5. If progress and lessons exist, calculate the percentage
         if (userProgress && totalLessons > 0) {
           const completedLessonsCount = userProgress.completedLessons.length;
-          progress = Math.round((completedLessonsCount / totalLessons) * 100);
+          progress = Math.min(100, Math.round((completedLessonsCount / totalLessons) * 100));
         }
 
         // ✅ Add instructor name in response
@@ -52,12 +52,12 @@ export const getMyLearning = async (req, res) => {
           title: course.title,
           thumbnailURL: course.thumbnailURL,
           progress,
-         instructor: course.instructor ? { fullname: course.instructor.fullname } : null
-};
-        
+          instructor: course.instructor ? { fullname: course.instructor.fullname } : null
+        };
+
       })
     );
-    
+
     // Filter out any null results
     const finalCourses = coursesWithProgress.filter(c => c !== null);
 
@@ -70,34 +70,34 @@ export const getMyLearning = async (req, res) => {
 };
 
 export const getLessonsForCourse = async (req, res) => {
-    const { courseId } = req.params;
-    const userId = req.user.id;
+  const { courseId } = req.params;
+  const userId = req.user.id;
 
-    try {
-        // 1. Course ke saare lessons nikalo
-        const allLessons = await Lesson.find({ course: courseId }).sort({ lessonNumber: 1 });
-        
-        // 2. User ki progress nikalo
-        const progress = await UserProgress.findOne({ user: userId, course: courseId });
-        const completed = progress ? progress.completedLessons.map(id => id.toString()) : [];
+  try {
+    // 1. Course ke saare lessons nikalo
+    const allLessons = await Lesson.find({ course: courseId }).sort({ lessonNumber: 1 });
 
-        // 3. Har lesson me 'isUnlocked' property add karo
-        const lessonsWithStatus = allLessons.map((lesson, index) => {
-            let isUnlocked = false;
-            if (index === 0) {
-                isUnlocked = true; // Pehla lesson hamesha unlocked hota hai
-            } else {
-                const previousLessonId = allLessons[index - 1]._id.toString();
-                if (completed.includes(previousLessonId)) {
-                    isUnlocked = true; // Agar pichla lesson complete hai, to isse unlock karo
-                }
-            }
-            return { ...lesson.toObject(), isUnlocked };
-        });
+    // 2. User ki progress nikalo
+    const progress = await UserProgress.findOne({ user: userId, course: courseId });
+    const completed = progress ? progress.completedLessons.map(id => id.toString()) : [];
 
-        res.status(200).json(lessonsWithStatus);
+    // 3. Har lesson me 'isUnlocked' property add karo
+    const lessonsWithStatus = allLessons.map((lesson, index) => {
+      let isUnlocked = false;
+      if (index === 0) {
+        isUnlocked = true; // Pehla lesson hamesha unlocked hota hai
+      } else {
+        const previousLessonId = allLessons[index - 1]._id.toString();
+        if (completed.includes(previousLessonId)) {
+          isUnlocked = true; // Agar pichla lesson complete hai, to isse unlock karo
+        }
+      }
+      return { ...lesson.toObject(), isUnlocked };
+    });
 
-    } catch (error) {
-        res.status(500).json({ message: "Server Error" });
-    }
+    res.status(200).json(lessonsWithStatus);
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
 };

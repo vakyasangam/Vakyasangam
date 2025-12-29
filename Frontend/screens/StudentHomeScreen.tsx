@@ -68,10 +68,19 @@ const StudentHomeScreen = () => {
   }, [fetchData, userToken]);
 
   const navigateToCourseDetail = (courseId: string, courseTitle: string) => {
-    (navigation as any).navigate('Courses', {
-      screen: 'CourseDetail',
-      params: { courseId, courseTitle },
-    });
+    // Check if user is already enrolled
+    const isEnrolled = user?.enrolledCourses?.some(id => id === courseId);
+
+    if (isEnrolled) {
+      // Already enrolled - go directly to player
+      (navigation as any).navigate('CoursePlayer', { courseId });
+    } else {
+      // Not enrolled - show course details for enrollment
+      (navigation as any).navigate('Courses', {
+        screen: 'CourseDetail',
+        params: { courseId, courseTitle },
+      });
+    }
   };
 
   const navigateToCoursePlayer = (courseId: string) => {
