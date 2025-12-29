@@ -197,8 +197,30 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
             const embedUrl = getYouTubeEmbedURL(videoUrl || '');
             return (
                 <WebView
-                    source={{ uri: embedUrl }}
+                    source={{
+                        html: `
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <style>
+                                    body, html { margin: 0; padding: 0; background-color: #000; height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; }
+                                    iframe { width: 100%; height: 100%; border: none; }
+                                </style>
+                            </head>
+                            <body>
+                                <iframe 
+                                    src="${embedUrl}" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            </body>
+                            </html>
+                        `,
+                        baseUrl: "https://www.youtube.com"
+                    }}
                     style={styles.videoPlayer}
+                    originWhitelist={['*']}
                     allowsFullscreenVideo={true}
                     allowsInlineMediaPlayback={true}
                     mediaPlaybackRequiresUserAction={false}
@@ -212,7 +234,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                         </View>
                     )}
                     onLoadEnd={() => {
-                        setTimeout(() => markLessonAsComplete(), 3000);
+                        setTimeout(() => markLessonAsComplete(), 5000);
                     }}
                     onError={(error) => {
                         console.error('YouTube WebView Error:', error);
