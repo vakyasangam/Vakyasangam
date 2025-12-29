@@ -12,7 +12,8 @@ import {
     UIManager,
     Platform,
     Image,
-    Linking
+    Linking,
+    Modal
 } from 'react-native';
 import Video, { OnVideoErrorData } from 'react-native-video';
 import { WebView } from 'react-native-webview';
@@ -40,7 +41,7 @@ interface Lesson {
     nptelUrl?: string;
 }
 interface Module { _id: string; title: string; lessons: Lesson[]; }
-interface Course { _id: string; title: string; thumbnailURL?: string; instructor: { fullname: string }; modules: Module[]; }
+interface Course { _id: string; title: string; description?: string; thumbnailURL?: string; instructor: { fullname: string }; modules: Module[]; }
 type MainStackParamList = { MainTabs: undefined; CoursePlayer: { courseId: string }; };
 type CoursePlayerScreenProps = { route: RouteProp<MainStackParamList, 'CoursePlayer'>; navigation: NativeStackNavigationProp<MainStackParamList, 'CoursePlayer'>; };
 
@@ -79,6 +80,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
     const [openModuleIds, setOpenModuleIds] = useState<Set<string>>(new Set());
+    const [showCourseInfo, setShowCourseInfo] = useState(false);
 
     // Hide default navigation header
     useEffect(() => {
@@ -289,6 +291,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 <TouchableOpacity
                     style={styles.headerIconButton}
                     activeOpacity={0.7}
+                    onPress={() => setShowCourseInfo(true)}
                 >
                     <Ionicons name="ellipsis-vertical" size={24} color="#F1F5F9" />
                 </TouchableOpacity>
@@ -415,6 +418,60 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     );
                 })}
             </ScrollView>
+
+            {/* Course Info Modal */}
+            <Modal
+                visible={showCourseInfo}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setShowCourseInfo(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Course Information</Text>
+                            <TouchableOpacity onPress={() => setShowCourseInfo(false)}>
+                                <Ionicons name="close" size={28} color="#F1F5F9" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody}>
+                            <Text style={styles.courseInfoTitle}>{course?.title}</Text>
+                            <Text style={styles.courseInfoInstructor}>by {course?.instructor?.fullname}</Text>
+
+                            <View style={styles.infoSection}>
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="book-outline" size={20} color="#94A3B8" />
+                                    <Text style={styles.infoLabel}>Total Modules:</Text>
+                                    <Text style={styles.infoValue}>{course?.modules?.length || 0}</Text>
+                                </View>
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="play-circle-outline" size={20} color="#94A3B8" />
+                                    <Text style={styles.infoLabel}>Total Lessons:</Text>
+                                    <Text style={styles.infoValue}>{progressInfo.totalLessons}</Text>
+                                </View>
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="checkmark-circle-outline" size={20} color="#94A3B8" />
+                                    <Text style={styles.infoLabel}>Completed:</Text>
+                                    <Text style={styles.infoValue}>{completedLessons.size}</Text>
+                                </View>
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="stats-chart-outline" size={20} color="#94A3B8" />
+                                    <Text style={styles.infoLabel}>Progress:</Text>
+                                    <Text style={styles.infoValue}>{progressInfo.progressPercentage}%</Text>
+                                </View>
+                            </View>
+
+                            {course?.description && (
+                                <View style={styles.descriptionSection}>
+                                    <Text style={styles.descriptionTitle}>About this course</Text>
+                                    <Text style={styles.descriptionText}>{course.description}</Text>
+                                </View>
+                            )}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -707,6 +764,87 @@ const styles = StyleSheet.create({
         color: '#F1F5F9',
         fontWeight: '600',
         letterSpacing: 0.3,
+    },
+
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#1E293B',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '80%',
+        paddingBottom: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#334155',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#F1F5F9',
+        letterSpacing: 0.3,
+    },
+    modalBody: {
+        padding: 20,
+    },
+    courseInfoTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#F1F5F9',
+        marginBottom: 8,
+    },
+    courseInfoInstructor: {
+        fontSize: 15,
+        color: '#94A3B8',
+        marginBottom: 24,
+    },
+    infoSection: {
+        backgroundColor: '#334155',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        gap: 12,
+    },
+    infoLabel: {
+        flex: 1,
+        fontSize: 15,
+        color: '#CBD5E1',
+        fontWeight: '500',
+    },
+    infoValue: {
+        fontSize: 16,
+        color: '#F1F5F9',
+        fontWeight: '700',
+    },
+    descriptionSection: {
+        backgroundColor: '#334155',
+        borderRadius: 12,
+        padding: 16,
+    },
+    descriptionTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#F1F5F9',
+        marginBottom: 12,
+    },
+    descriptionText: {
+        fontSize: 14,
+        color: '#CBD5E1',
+        lineHeight: 22,
     },
 });
 
