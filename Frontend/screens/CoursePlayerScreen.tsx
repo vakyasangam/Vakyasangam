@@ -392,13 +392,26 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
 
 // --- Styles ---
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F7F8FA' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7F8FA' },
+    container: {
+        flex: 1,
+        backgroundColor: '#0F172A' // Dark navy background
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#0F172A'
+    },
 
     playerArea: {
         width: '100%',
         aspectRatio: 16 / 9,
-        backgroundColor: 'black',
+        backgroundColor: '#000',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     videoPlayer: { flex: 1 },
     thumbnailContainer: {
@@ -413,28 +426,30 @@ const styles = StyleSheet.create({
     },
     thumbnailOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     thumbnailText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 8,
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: '700',
+        marginTop: 12,
+        letterSpacing: 0.5,
     },
 
     // WebView loading styles
     webViewLoading: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'black',
+        backgroundColor: '#000',
         justifyContent: 'center',
         alignItems: 'center',
     },
     loadingText: {
-        color: 'white',
-        fontSize: 14,
-        marginTop: 10,
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 12,
     },
 
     // No content styles
@@ -442,104 +457,183 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#1E293B',
     },
     noContentText: {
         fontSize: 16,
-        color: '#718096',
-        marginTop: 10,
+        color: '#94A3B8',
+        marginTop: 12,
     },
 
-    contentContainer: { flex: 1 },
-    headerInfo: { padding: 20, borderBottomWidth: 1, borderBottomColor: '#EDF2F7' },
-    lessonTitleHeader: { fontSize: 22, fontWeight: 'bold', color: '#1A202C', marginBottom: 4 },
-    courseTitle: { fontSize: 16, color: '#4A5568', marginBottom: 4 },
-    instructor: { fontSize: 14, color: '#718096' },
+    contentContainer: {
+        flex: 1,
+        backgroundColor: '#0F172A',
+    },
+    headerInfo: {
+        padding: 24,
+        backgroundColor: '#1E293B',
+        borderBottomWidth: 2,
+        borderBottomColor: '#334155',
+    },
+    lessonTitleHeader: {
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#F1F5F9',
+        marginBottom: 8,
+        letterSpacing: 0.3,
+    },
+    courseTitle: {
+        fontSize: 16,
+        color: '#94A3B8',
+        marginBottom: 6
+    },
+    instructor: {
+        fontSize: 15,
+        color: '#64748B',
+        fontWeight: '500',
+    },
 
-    progressWrapper: { marginTop: 20 },
-    progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    progressText: { fontSize: 14, color: '#2D3748', fontWeight: '600' },
-    progressDetail: { fontSize: 14, color: '#718096' },
-    progressBarBackground: { height: 8, backgroundColor: '#E2E8F0', borderRadius: 4, overflow: 'hidden' },
-    progressBarForeground: { height: '100%', backgroundColor: '#4A90E2', borderRadius: 4 },
+    progressWrapper: {
+        marginTop: 20,
+        backgroundColor: '#334155',
+        padding: 16,
+        borderRadius: 12,
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10
+    },
+    progressText: {
+        fontSize: 15,
+        color: '#F1F5F9',
+        fontWeight: '700'
+    },
+    progressDetail: {
+        fontSize: 14,
+        color: '#94A3B8',
+        fontWeight: '500',
+    },
+    progressBarBackground: {
+        height: 10,
+        backgroundColor: '#475569',
+        borderRadius: 20,
+        overflow: 'hidden'
+    },
+    progressBarForeground: {
+        height: '100%',
+        backgroundColor: '#3B82F6',
+        borderRadius: 20,
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 4,
+    },
 
     playlistHeader: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1A202C',
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#F1F5F9',
         paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 10,
+        paddingTop: 24,
+        paddingBottom: 12,
+        letterSpacing: 0.5,
     },
     moduleContainer: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 20,
-        borderRadius: 12,
-        marginBottom: 15,
-        elevation: 2,
-        shadowColor: '#9DA3B7',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
+        backgroundColor: '#1E293B',
+        marginHorizontal: 16,
+        borderRadius: 16,
+        marginBottom: 16,
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#334155',
     },
     moduleHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 15,
+        padding: 18,
+        backgroundColor: '#334155',
     },
-    moduleHeaderText: { flex: 1, marginRight: 10 },
-    moduleIndex: { fontSize: 12, color: '#718096', fontWeight: '600', textTransform: 'uppercase' },
-    moduleTitle: { fontSize: 16, fontWeight: 'bold', color: '#2D3748', marginTop: 2 },
+    moduleHeaderText: {
+        flex: 1,
+        marginRight: 12
+    },
+    moduleIndex: {
+        fontSize: 11,
+        color: '#94A3B8',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 1.2,
+    },
+    moduleTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#F1F5F9',
+        marginTop: 4,
+        letterSpacing: 0.2,
+    },
 
-    lessonsList: { borderTopWidth: 1, borderTopColor: '#EDF2F7' },
+    lessonsList: {
+        borderTopWidth: 0,
+    },
     lessonItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        backgroundColor: '#FFFFFF',
+        paddingVertical: 16,
+        paddingHorizontal: 18,
+        backgroundColor: '#1E293B',
         borderBottomWidth: 1,
-        borderBottomColor: '#F7F8FA',
+        borderBottomColor: '#334155',
     },
-    selectedLessonItem: { backgroundColor: '#EBF8FF' },
+    selectedLessonItem: {
+        backgroundColor: '#1E40AF',
+        borderLeftWidth: 4,
+        borderLeftColor: '#3B82F6',
+    },
 
     // Lesson info container
     lessonInfo: {
-        marginLeft: 15,
+        marginLeft: 14,
         flex: 1,
     },
     lessonTitle: {
-        fontSize: 15,
-        color: '#4A5568',
-        fontWeight: '500',
+        fontSize: 16,
+        color: '#CBD5E1',
+        fontWeight: '600',
+        letterSpacing: 0.2,
     },
     selectedLessonTitle: {
-        color: '#2C5282',
-        fontWeight: 'bold'
+        color: '#FFFFFF',
+        fontWeight: '700'
     },
     // Lesson type indicator
     lessonTypeIndicator: {
         fontSize: 12,
-        color: '#718096',
-        marginTop: 2,
-        fontStyle: 'italic',
+        color: '#94A3B8',
+        marginTop: 4,
+        fontWeight: '500',
     },
     youtubeFallbackBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
-        paddingVertical: 12,
+        backgroundColor: '#1E293B',
+        paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: '#EDF2F7',
-        gap: 8,
+        borderBottomColor: '#334155',
+        gap: 10,
     },
     youtubeFallbackText: {
-        fontSize: 14,
-        color: '#2D3748',
+        fontSize: 15,
+        color: '#F1F5F9',
         fontWeight: '600',
+        letterSpacing: 0.3,
     },
 });
 
