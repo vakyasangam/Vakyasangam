@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    ScrollView, 
-    TouchableOpacity, 
-    ActivityIndicator, 
-    Alert, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    TouchableOpacity,
+    ActivityIndicator,
+    Alert,
     SafeAreaView,
     LayoutAnimation,
     UIManager,
@@ -22,16 +22,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
+    UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 // --- Type Definitions ---
-interface Lesson { 
-    _id: string; 
-    title: string; 
-    videoURL?: string; 
+interface Lesson {
+    _id: string;
+    title: string;
+    videoURL?: string;
     videoUrl?: string;
-    duration: number; 
+    duration: number;
     lessonType?: 'video' | 'pdf' | 'youtube' | 'nptel';
     pdfUrl?: string;
     nptelUrl?: string;
@@ -54,7 +54,7 @@ const isNPTELURL = (url: string): boolean => {
 const getYouTubeEmbedURL = (url: string): string => {
     try {
         let videoId = '';
-        
+
         if (url.includes('youtube.com/watch?v=')) {
             videoId = url.split('v=')[1]?.split('&')[0];
         } else if (url.includes('youtu.be/')) {
@@ -62,8 +62,8 @@ const getYouTubeEmbedURL = (url: string): string => {
         } else if (url.includes('youtube.com/embed/')) {
             videoId = url.split('embed/')[1]?.split('?')[0];
         }
-        
-        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1` : '';
+
+        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1&origin=https://www.youtube.com` : '';
     } catch (error) {
         console.error('Error creating YouTube embed URL:', error);
         return '';
@@ -85,7 +85,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
             try {
                 const { data } = await api.get(`/api/${courseId}/content`);
                 setCourse(data.course);
-                
+
                 if (data.userProgress?.completedLessons) {
                     setCompletedLessons(new Set(data.userProgress.completedLessons));
                 }
@@ -94,7 +94,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     setOpenModuleIds(new Set([data.course.modules[0]._id]));
                 }
             } catch (error: any) {
-                const message = error.response?.status === 403 
+                const message = error.response?.status === 403
                     ? "Please enroll in this course to view the content."
                     : "Could not load course content.";
                 Alert.alert("Error", message, [{ text: "OK", onPress: () => navigation.goBack() }]);
@@ -106,7 +106,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         fetchCourseContent();
     }, [courseId, navigation]);
 
-    const toggleModule = (moduleId: string) => { 
+    const toggleModule = (moduleId: string) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setOpenModuleIds(prevIds => {
             const newIds = new Set(prevIds);
@@ -114,7 +114,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
             return newIds;
         });
     };
-    
+
     const playFirstLesson = () => {
         if (course?.modules?.[0]?.lessons?.[0]) {
             const firstLesson = course.modules[0].lessons[0];
@@ -131,7 +131,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
     const markLessonAsComplete = async (lessonId?: string) => {
         const targetLessonId = lessonId || selectedLesson?._id;
         if (!targetLessonId || completedLessons.has(targetLessonId)) return;
-        
+
         try {
             await api.post('/api/progress/complete-lesson', {
                 courseId: course?._id,
@@ -154,9 +154,9 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
     // ✅ Get preview content for all lesson types
     const getPreviewContent = () => {
         if (!selectedLesson) return null;
-        
+
         const videoUrl = selectedLesson.videoURL || selectedLesson.videoUrl || selectedLesson.nptelUrl;
-        
+
         // NPTEL videos - Use WebView for course pages
         if (selectedLesson.lessonType === 'nptel' || isNPTELURL(videoUrl || '')) {
             return (
@@ -191,7 +191,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 />
             );
         }
-        
+
         // YouTube videos - WebView embed
         else if (selectedLesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl))) {
             const embedUrl = getYouTubeEmbedURL(videoUrl || '');
@@ -225,7 +225,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 />
             );
         }
-        
+
         // PDF files
         else if (selectedLesson.lessonType === 'pdf') {
             return (
@@ -246,7 +246,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 />
             );
         }
-        
+
         // Regular videos (Direct URLs - Cloudinary, etc.)
         else if (videoUrl) {
             return (
@@ -260,7 +260,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 />
             );
         }
-        
+
         return (
             <View style={styles.noContentContainer}>
                 <Ionicons name="alert-circle-outline" size={60} color="#718096" />
@@ -280,9 +280,9 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     getPreviewContent()
                 ) : (
                     <TouchableOpacity style={styles.thumbnailContainer} onPress={playFirstLesson} activeOpacity={0.8}>
-                        <Image 
-                            source={{ uri: course?.thumbnailURL || 'https://placehold.co/600x400/000000/FFFFFF?text=Course' }} 
-                            style={styles.thumbnail} 
+                        <Image
+                            source={{ uri: course?.thumbnailURL || 'https://placehold.co/600x400/000000/FFFFFF?text=Course' }}
+                            style={styles.thumbnail}
                         />
                         <View style={styles.thumbnailOverlay}>
                             <Ionicons name="play-circle-outline" size={60} color="rgba(255, 255, 255, 0.9)" />
@@ -296,18 +296,18 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 <View style={styles.headerInfo}>
                     <Text style={styles.lessonTitleHeader}>{selectedLesson?.title || course?.title || 'Course Content'}</Text>
                     <Text style={styles.instructor}>by {course?.instructor?.fullname}</Text>
-                    
+
                     <View style={styles.progressWrapper}>
                         <View style={styles.progressHeader}>
-                           <Text style={styles.progressText}>{progressInfo.progressPercentage}% Complete</Text>
-                           <Text style={styles.progressDetail}>{completedLessons.size} of {progressInfo.totalLessons} lessons</Text>
+                            <Text style={styles.progressText}>{progressInfo.progressPercentage}% Complete</Text>
+                            <Text style={styles.progressDetail}>{completedLessons.size} of {progressInfo.totalLessons} lessons</Text>
                         </View>
                         <View style={styles.progressBarBackground}>
                             <View style={[styles.progressBarForeground, { width: `${progressInfo.progressPercentage}%` }]} />
                         </View>
                     </View>
                 </View>
-                
+
                 <Text style={styles.playlistHeader}>Course Playlist</Text>
 
                 {course?.modules.map((module, index) => {
@@ -321,18 +321,18 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                                 </View>
                                 <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={22} color="#4A5568" />
                             </TouchableOpacity>
-                            
+
                             {isOpen && (
                                 <View style={styles.lessonsList}>
                                     {module.lessons.map((lesson: Lesson) => {
                                         const isCompleted = completedLessons.has(lesson._id);
                                         const isSelected = selectedLesson?._id === lesson._id;
                                         const videoUrl = lesson.videoURL || lesson.videoUrl || lesson.nptelUrl;
-                                        
+
                                         // Icon based on lesson type
                                         let iconName = "play-circle-outline";
                                         let iconColor = "#718096";
-                                        
+
                                         if (isCompleted) {
                                             iconName = "checkmark-circle";
                                             iconColor = "#28a745";
@@ -351,8 +351,8 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                                         }
 
                                         return (
-                                            <TouchableOpacity 
-                                                key={lesson._id} 
+                                            <TouchableOpacity
+                                                key={lesson._id}
                                                 style={[styles.lessonItem, isSelected && styles.selectedLessonItem]}
                                                 onPress={() => handleLessonPress(lesson)}
                                             >
@@ -389,7 +389,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F7F8FA' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7F8FA' },
-    
+
     playerArea: {
         width: '100%',
         aspectRatio: 16 / 9,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 10,
     },
-    
+
     // No content styles
     noContentContainer: {
         flex: 1,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     lessonTitleHeader: { fontSize: 22, fontWeight: 'bold', color: '#1A202C', marginBottom: 4 },
     courseTitle: { fontSize: 16, color: '#4A5568', marginBottom: 4 },
     instructor: { fontSize: 14, color: '#718096' },
-    
+
     progressWrapper: { marginTop: 20 },
     progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     progressText: { fontSize: 14, color: '#2D3748', fontWeight: '600' },
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     moduleHeaderText: { flex: 1, marginRight: 10 },
     moduleIndex: { fontSize: 12, color: '#718096', fontWeight: '600', textTransform: 'uppercase' },
     moduleTitle: { fontSize: 16, fontWeight: 'bold', color: '#2D3748', marginTop: 2 },
-    
+
     lessonsList: { borderTopWidth: 1, borderTopColor: '#EDF2F7' },
     lessonItem: {
         flexDirection: 'row',
@@ -499,20 +499,20 @@ const styles = StyleSheet.create({
         borderBottomColor: '#F7F8FA',
     },
     selectedLessonItem: { backgroundColor: '#EBF8FF' },
-    
+
     // Lesson info container
-    lessonInfo: { 
-        marginLeft: 15, 
+    lessonInfo: {
+        marginLeft: 15,
         flex: 1,
     },
-    lessonTitle: { 
-        fontSize: 15, 
+    lessonTitle: {
+        fontSize: 15,
         color: '#4A5568',
         fontWeight: '500',
     },
-    selectedLessonTitle: { 
-        color: '#2C5282', 
-        fontWeight: 'bold' 
+    selectedLessonTitle: {
+        color: '#2C5282',
+        fontWeight: 'bold'
     },
     // Lesson type indicator
     lessonTypeIndicator: {
