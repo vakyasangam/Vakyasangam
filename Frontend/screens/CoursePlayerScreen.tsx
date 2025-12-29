@@ -65,7 +65,8 @@ const getYouTubeEmbedURL = (url: string): string => {
             videoId = url.split('embed/')[1]?.split('?')[0];
         }
 
-        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1&origin=https://www.youtube.com` : '';
+        // Use nocookie domain + force origin param
+        return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1&origin=https://www.youtube.com` : '';
     } catch (error) {
         console.error('Error creating YouTube embed URL:', error);
         return '';
@@ -211,15 +212,19 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                                 </style>
                             </head>
                             <body>
-                                <iframe 
-                                    src="${embedUrl}" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                <iframe
+                                    src="${embedUrl}"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowfullscreen>
                                 </iframe>
                             </body>
                             </html>
                         `,
                         baseUrl: "https://www.youtube.com",
+                        headers: {
+                            "Referer": "https://www.youtube.com/",
+                            "Origin": "https://www.youtube.com"
+                        }
                     }}
                     style={styles.videoPlayer}
                     originWhitelist={['*']}
@@ -228,6 +233,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     mediaPlaybackRequiresUserAction={false}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
+                    setSupportMultipleWindows={false}
                     startInLoadingState={true}
                     renderLoading={() => (
                         <View style={styles.webViewLoading}>
@@ -245,6 +251,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     scrollEnabled={false}
                     showsHorizontalScrollIndicator={false}
                     showsVerticalScrollIndicator={false}
+                    userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 />
             );
         }
