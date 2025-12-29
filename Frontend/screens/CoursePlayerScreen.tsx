@@ -182,9 +182,6 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             <Text style={styles.loadingText}>Loading NPTEL Course...</Text>
                         </View>
                     )}
-                    onLoadEnd={() => {
-                        setTimeout(() => markLessonAsComplete(), 5000);
-                    }}
                     onError={(error) => {
                         console.error('NPTEL WebView Error:', error);
                         Alert.alert("Error", "Failed to load NPTEL course. Please check your internet connection.");
