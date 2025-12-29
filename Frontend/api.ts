@@ -9,12 +9,9 @@ let onUnauthorized: UnauthorizedHandler | null = null;
 export const setApiUnauthorizedHandler = (fn: UnauthorizedHandler) => { onUnauthorized = fn; };
 
 const api = axios.create({
-  baseURL: 'http://localhost:3003',
+  baseURL: 'https://vakyasangam.onrender.com', // Remote Backend
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',
-    Pragma: 'no-cache',
-    Expires: '0',
   },
   timeout: 60000,
 });
@@ -81,14 +78,14 @@ api.interceptors.response.use(
         }
 
         // Call refresh endpoint
-        const res = await axios.post(
-          'http://localhost:3003/user/auth/refresh',
-          { refreshToken },
+        const response = await axios.post(
+          'https://vakyasangam.onrender.com/user/auth/refresh',
+          { token: refreshToken },
           { headers: { 'Content-Type': 'application/json' }, timeout: 20000 }
         );
 
-        const newAccessToken: string | undefined = res.data?.accessToken;
-        const newRefreshToken: string | undefined = res.data?.refreshToken; // if your API returns one
+        const newAccessToken: string | undefined = response.data?.accessToken;
+        const newRefreshToken: string | undefined = response.data?.refreshToken; // if your API returns one
 
         if (!newAccessToken) {
           // Refresh failed / malformed response
