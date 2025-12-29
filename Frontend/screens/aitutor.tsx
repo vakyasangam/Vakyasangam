@@ -5,10 +5,11 @@ import {
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { View as MotiView } from 'moti';
 
 // --- App-wide Color Theme ---
 const COLORS = {
-  primary: '#FFC72C', 
+  primary: '#FFC72C',
   dark: '#34495E',
   light: '#FDF9F0',
   white: '#FFFFFF',
@@ -32,23 +33,23 @@ const AVAILABLE_LANGUAGES = [
 // --- Helper function to assign icons to lessons ---
 const getIconForLesson = (lessonNumber: number): string => {
   const icons = [
-        'chatbubble-ellipses-outline', // Day 1: Greetings
-        'list-outline',                // Day 2: Numbers
-        'person-outline',              // Day 3: Pronouns
-        'help-circle-outline',         // Day 4: Questions
-        'time-outline',                // Day 5: Time/Days
-        'people-outline',              // Day 6: Family
-        'color-palette-outline',       // Day 7: Colors
-        'reader-outline',              // Day 8: Sentence Structure
-        'newspaper-outline',           // Day 9: Present Tense
-        'move-outline',                // Day 10: Prepositions
-        'cart-outline',                // Day 11: Shopping
-        'fast-food-outline',           // Day 12: Restaurant
-        'map-outline',                 // Day 13: Directions
-        'game-controller-outline',     // Day 14: Hobbies
-        'trophy-outline',              // Day 15: Review
-    ];
-    return icons[lessonNumber - 1] || 'book-outline'; 
+    'chatbubble-ellipses-outline', // Day 1: Greetings
+    'list-outline',                // Day 2: Numbers
+    'person-outline',              // Day 3: Pronouns
+    'help-circle-outline',         // Day 4: Questions
+    'time-outline',                // Day 5: Time/Days
+    'people-outline',              // Day 6: Family
+    'color-palette-outline',       // Day 7: Colors
+    'reader-outline',              // Day 8: Sentence Structure
+    'newspaper-outline',           // Day 9: Present Tense
+    'move-outline',                // Day 10: Prepositions
+    'cart-outline',                // Day 11: Shopping
+    'fast-food-outline',           // Day 12: Restaurant
+    'map-outline',                 // Day 13: Directions
+    'game-controller-outline',     // Day 14: Hobbies
+    'trophy-outline',              // Day 15: Review
+  ];
+  return icons[lessonNumber - 1] || 'book-outline';
 };
 
 // --- Main Component ---
@@ -62,10 +63,10 @@ export default function AiTutorScreen() {
   const [currentLessonNumber, setCurrentLessonNumber] = useState<number>(1);
   const [activeLessonTitle, setActiveLessonTitle] = useState<string>('');
   const [pickedLanguage, setPickedLanguage] = useState<string | null>(null);
-  const [lessonsList, setLessonsList] = useState([]);
+  const [lessonsList, setLessonsList] = useState<{ id: number; title: string; icon: string }[]>([]);
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [totalLessons, setTotalLessons] = useState(0); // Track total lessons count
-  
+
   const flatListRef = useRef<FlatList>(null);
 
   // --- Effects ---
@@ -76,7 +77,7 @@ export default function AiTutorScreen() {
       try {
         const lang = await AsyncStorage.getItem('currentUserLanguage');
         const lessonNumStr = await AsyncStorage.getItem('currentLessonNumber');
-        
+
         if (lang) {
           setSelectedLanguage(lang);
           setCurrentLessonNumber(lessonNumStr ? parseInt(lessonNumStr, 10) : 1);
@@ -96,24 +97,48 @@ export default function AiTutorScreen() {
   useEffect(() => {
     const fetchLessons = async (language: string | null) => {
       if (!language) return;
-      
+
       setLessonsLoading(true);
       try {
         const response = await fetch(`${PYTHON_API_BASE_URL}/lessons?language=${language}`);
-        const data = await response.json();
-        
-        const formattedLessons = data.lessons.map((lesson: any) => ({
-          id: lesson.number,
-          title: lesson.title,
-          icon: getIconForLesson(lesson.number),
-        }));
-        
-        setLessonsList(formattedLessons);
-        setTotalLessons(formattedLessons.length); // Store total lessons count
+
+        // Check if response is OK and likely JSON
+        const contentType = response.headers.get("content-type");
+        if (response.ok && contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await response.json();
+          const formattedLessons = data.lessons.map((lesson: any) => ({
+            id: lesson.number,
+            title: lesson.title,
+            icon: getIconForLesson(lesson.number),
+          }));
+
+          if (formattedLessons.length > 0) {
+            setLessonsList(formattedLessons);
+            setTotalLessons(formattedLessons.length);
+          } else {
+            console.warn("Backend returned empty lessons list. Using fallback.");
+            throw new Error("Empty lessons list"); // Trigger catch block for fallback
+          }
+        } else {
+          console.warn("Backend returned non-JSON or error for lessons. Using fallback.");
+          throw new Error("Invalid backend response");
+        }
       } catch (error) {
-        console.error("Failed to fetch lessons:", error);
-        setLessonsList([]);
-        setTotalLessons(0);
+        console.warn("Failed to fetch lessons (using fallback):", error);
+        // Fallback to hardcoded lessons if backend fails or returns empty
+        const fallbackLessons = Array.from({ length: 15 }, (_, i) => ({
+          id: i + 1,
+          title: `Lesson ${i + 1}: ${[
+            'Greetings & Basics', 'Numbers & Counting', 'Common Pronouns',
+            'Asking Questions', 'Time & Days', 'Family & Friends',
+            'Colors & Shapes', 'Sentence Structure', 'Present Tense',
+            'Prepositions', 'Shopping Terms', 'At the Restaurant',
+            'Asking Directions', 'Hobbies & Interests', 'Review & Practice'
+          ][i]}`,
+          icon: getIconForLesson(i + 1),
+        }));
+        setLessonsList(fallbackLessons);
+        setTotalLessons(15);
       } finally {
         setLessonsLoading(false);
       }
@@ -148,13 +173,13 @@ export default function AiTutorScreen() {
       console.error("Failed to save language:", error);
     }
   };
-  
+
   const handleCompleteLesson = async () => {
     try {
       const nextLessonNum = currentLessonNumber + 1;
       await AsyncStorage.setItem('currentLessonNumber', String(nextLessonNum));
       setCurrentLessonNumber(nextLessonNum);
-      
+
       // Check if this was the last lesson
       if (nextLessonNum > totalLessons) {
         // Course completed!
@@ -179,7 +204,7 @@ export default function AiTutorScreen() {
     await sendMessageToPython(`Teach me Lesson ${lesson.id}: ${lesson.title}`, lesson.id);
     setLoading(false);
   };
-  
+
   const handleResetProgress = async () => {
     if (!canChangeLanguage()) {
       Alert.alert(
@@ -195,8 +220,8 @@ export default function AiTutorScreen() {
       "This will reset all your progress and allow you to choose a new language. Are you sure?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Reset", 
+        {
+          text: "Reset",
           style: "destructive",
           onPress: async () => {
             try {
@@ -225,24 +250,34 @@ export default function AiTutorScreen() {
       const pythonResponse = await fetch(`${PYTHON_API_BASE_URL}/chat`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query, 
-          language: selectedLanguage, 
+          query,
+          language: selectedLanguage,
           lesson_to_teach: lessonId,
         }),
       });
-      if (!pythonResponse.ok) {
-        throw new Error(`HTTP error! status: ${pythonResponse.status}`);
+
+      const contentType = pythonResponse.headers.get("content-type");
+      if (pythonResponse.ok && contentType && contentType.includes("application/json")) {
+        const pythonData = await pythonResponse.json();
+        setMessages((prev) => [...prev, { role: "assistant", text: pythonData.response || "No reply" }]);
+      } else {
+        throw new Error("Invalid chat backend response");
       }
-      const pythonData = await pythonResponse.json();
-      setMessages((prev) => [...prev, { role: "assistant", text: pythonData.response || "No reply" }]);
+
     } catch (error) {
-      console.error("Error connecting to Python AI:", error);
-      setMessages((prev) => [...prev, { role: "assistant", text: "⚠️ Error connecting to AI tutor. Please check the server." }]);
+      console.warn("Using offline mode (Backend unreachable):", error);
+      // Fallback/Mock response
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          role: "assistant",
+          text: `(Offline Mode) That's a great question about ${selectedLanguage}! Since I'm currently unable to reach the AI server, I can't give a specific answer right now. But keep practicing!`
+        }]);
+      }, 1000); // Fake delay for realism
     } finally {
       setLoading(false);
     }
   };
-  
+
   // --- Render Functions ---
 
   const renderLoadingView = () => (
@@ -251,134 +286,169 @@ export default function AiTutorScreen() {
       <Text style={styles.loadingText}>Loading...</Text>
     </View>
   );
-  
-  const renderLanguageSelection = () => (
-    <View style={styles.centerContainer}>
-      <Ionicons name="school-outline" size={60} color={COLORS.primary} />
-      <Text style={styles.title}>Welcome to Your AI Tutor</Text>
-      <Text style={styles.subtitle}>Start by choosing a language to master.</Text>
-      
-      <View style={styles.cardContainer}>
-        {AVAILABLE_LANGUAGES.map(lang => (
-          <TouchableOpacity 
-            key={lang.value} 
-            style={[styles.langCard, pickedLanguage === lang.value && styles.langCardSelected]}
-            onPress={() => setPickedLanguage(lang.value)}
-          >
-            <Text style={[styles.langCardText, pickedLanguage === lang.value && styles.langCardSelected]}>
-              {lang.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
-      <TouchableOpacity 
-        style={[styles.bigButton, !pickedLanguage && styles.disabledButton]} 
-        onPress={handleSelectLanguage}
-        disabled={!pickedLanguage}
+  const renderLanguageSelection = () => (
+    <ScrollView contentContainerStyle={styles.centerScrollContainer} showsVerticalScrollIndicator={false}>
+      <MotiView
+        from={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 500 }}
+        style={{ alignItems: 'center', width: '100%' }}
       >
-        <Text style={styles.bigButtonText}>Start Learning</Text>
-      </TouchableOpacity>
-    </View> 
+        <Ionicons name="school-outline" size={80} color={COLORS.primary} />
+        <Text style={styles.title}>Welcome to Your AI Tutor</Text>
+        <Text style={styles.subtitle}>Start by choosing a language to master.</Text>
+
+        <View style={styles.cardContainer}>
+          {AVAILABLE_LANGUAGES.map((lang, index) => (
+            <MotiView
+              key={lang.value}
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: index * 100, type: 'timing' }}
+              style={{ width: '100%' }}
+            >
+              <TouchableOpacity
+                style={[styles.langCard, pickedLanguage === lang.value && styles.langCardSelected]}
+                onPress={() => setPickedLanguage(lang.value)}
+              >
+                <Text style={[styles.langCardText, pickedLanguage === lang.value && styles.langCardTextSelected]}>
+                  {lang.label}
+                </Text>
+                {pickedLanguage === lang.value && <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />}
+              </TouchableOpacity>
+            </MotiView>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.bigButton, !pickedLanguage && styles.disabledButton]}
+          onPress={handleSelectLanguage}
+          disabled={!pickedLanguage}
+        >
+          <Text style={styles.bigButtonText}>Start Learning</Text>
+          <Ionicons name="arrow-forward" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+      </MotiView>
+    </ScrollView>
   );
-  
+
   const renderLessonOverview = () => (
     <View style={styles.overviewContainer}>
-        <View style={styles.overviewHeader}>
-            <Text style={styles.title}>Your {selectedLanguage} Course</Text>
-            <Text style={styles.subtitle}>Select a lesson to begin or review.</Text>
-            
-            {/* Progress Indicator */}
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressText}>
-                Progress: {Math.min(currentLessonNumber - 1, totalLessons)} / {totalLessons} lessons completed
-              </Text>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { width: `${totalLessons > 0 ? (Math.min(currentLessonNumber - 1, totalLessons) / totalLessons) * 100 : 0}%` }
-                  ]} 
-                />
-              </View>
-              {areAllLessonsCompleted() && (
-                <Text style={styles.completedText}>🎉 Course Completed! You can now choose a new language.</Text>
-              )}
-            </View>
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        style={styles.overviewHeader}
+      >
+        <Text style={styles.title}>Your {selectedLanguage} Course</Text>
+        <Text style={styles.subtitle}>Select a lesson to begin or review.</Text>
+
+        {/* Progress Indicator */}
+        <View style={styles.progressContainer}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={styles.progressText}>Course Progress</Text>
+            <Text style={styles.progressText}>{Math.min(currentLessonNumber - 1, totalLessons)} / {totalLessons}</Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${totalLessons > 0 ? (Math.min(currentLessonNumber - 1, totalLessons) / totalLessons) * 100 : 0}%` }
+              ]}
+            />
+          </View>
+          {areAllLessonsCompleted() && (
+            <MotiView from={{ scale: 0 }} animate={{ scale: 1 }}>
+              <Text style={styles.completedText}>🎉 Course Completed!</Text>
+            </MotiView>
+          )}
         </View>
-        
-        {lessonsLoading ? (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>Fetching lessons...</Text>
-            </View>
-        ) : lessonsList.length === 0 ? (
-            <View style={styles.centerContainer}>
-                <Ionicons name="cloud-offline-outline" size={50} color={COLORS.grey} />
-                <Text style={styles.subtitle}>No lessons found for {selectedLanguage}.</Text>
-                <Text style={styles.subtitle}>Please check the backend server.</Text>
-            </View>
-        ) : (
-            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-          {lessonsList.map((lesson: { id: number; title: string; icon: string }) => {
+      </MotiView>
+
+      {lessonsLoading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Fetching lessons...</Text>
+        </View>
+      ) : lessonsList.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <Ionicons name="cloud-offline-outline" size={50} color={COLORS.grey} />
+          <Text style={styles.subtitle}>No lessons found for {selectedLanguage}.</Text>
+          <Text style={styles.subtitle}>Please check your internet connection.</Text>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          {lessonsList.map((lesson: { id: number; title: string; icon: string }, index) => {
             const isCompleted = lesson.id < currentLessonNumber;
             const isCurrent = lesson.id === currentLessonNumber;
             const isLocked = lesson.id > currentLessonNumber;
             return (
-              <TouchableOpacity
+              <MotiView
                 key={lesson.id}
-                style={[styles.lessonCard, isLocked && styles.lessonCardLocked, isCurrent && styles.lessonCardCurrent]}
-                disabled={isLocked}
-                onPress={() => handleStartLesson(lesson)}
+                from={{ opacity: 0, translateX: -20 }}
+                animate={{ opacity: 1, translateX: 0 }}
+                transition={{ delay: index * 50 }}
               >
-                <Ionicons name={isLocked ? "lock-closed" : lesson.icon} size={28} color={isLocked ? COLORS.grey : isCurrent ? COLORS.white : COLORS.dark} />
-                <View style={styles.lessonCardTextContainer}>
-                  <Text style={[styles.lessonCardTitle, (isLocked || isCurrent) && styles.lessonCardTitleAlt]}>{lesson.title}</Text>
-                  {isCompleted && <Text style={styles.lessonCardStatusComplete}>Completed</Text>}
-                  {isCurrent && <Text style={styles.lessonCardStatusCurrent}>Start Here!</Text>}
-                  {isLocked && <Text style={styles.lessonCardStatusLocked}>Complete previous lesson to unlock</Text>}
-                </View>
-                {!isLocked && <Ionicons name="chevron-forward-outline" size={24} color={isCurrent ? COLORS.white : COLORS.dark} />}
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.lessonCard, isLocked && styles.lessonCardLocked, isCurrent && styles.lessonCardCurrent]}
+                  disabled={isLocked}
+                  onPress={() => handleStartLesson(lesson)}
+                >
+                  <View style={[styles.iconContainer, isCurrent && { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                    <Ionicons name={isLocked ? "lock-closed" : lesson.icon} size={24} color={isLocked ? COLORS.grey : isCurrent ? COLORS.white : COLORS.primary} />
+                  </View>
+                  <View style={styles.lessonCardTextContainer}>
+                    <Text style={[styles.lessonCardTitle, (isLocked || isCurrent) && styles.lessonCardTitleAlt]}>{lesson.title}</Text>
+                    {isCompleted && <Text style={styles.lessonCardStatusComplete}>Completed</Text>}
+                    {isCurrent && <Text style={styles.lessonCardStatusCurrent}>Start Here!</Text>}
+                    {isLocked && <Text style={styles.lessonCardStatusLocked}>Locked</Text>}
+                  </View>
+                  {!isLocked && <Ionicons name="chevron-forward" size={24} color={isCurrent ? COLORS.white : COLORS.grey} />}
+                </TouchableOpacity>
+              </MotiView>
             );
           })}
-            </ScrollView>
-        )}
-        
-        <TouchableOpacity 
-          style={[styles.resetButton, !canChangeLanguage() && styles.disabledResetButton]} 
-          onPress={handleResetProgress}
-        >
-            <Ionicons name={canChangeLanguage() ? "refresh-outline" : "lock-closed-outline"} size={16} color={canChangeLanguage() ? COLORS.danger : COLORS.grey} />
-            <Text style={[styles.resetButtonText, !canChangeLanguage() && styles.disabledResetText]}>
-              {canChangeLanguage() 
-                ? "Choose New Language" 
-                : `Complete all ${totalLessons} lessons to change language`
-              }
-            </Text>
-        </TouchableOpacity>
-    </View> 
+        </ScrollView>
+      )}
+
+      <TouchableOpacity
+        style={[styles.resetButton, !canChangeLanguage() && styles.disabledResetButton]}
+        onPress={handleResetProgress}
+      >
+        <Ionicons name={canChangeLanguage() ? "refresh-outline" : "lock-closed-outline"} size={16} color={canChangeLanguage() ? COLORS.danger : COLORS.grey} />
+        <Text style={[styles.resetButtonText, !canChangeLanguage() && styles.disabledResetText]}>
+          {canChangeLanguage()
+            ? "Choose New Language"
+            : `Complete current course to switch`
+          }
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
-  
+
   const renderChatView = () => (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.light }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={styles.chatHeader}>
         <TouchableOpacity onPress={() => setAppPhase('lesson_overview')} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={COLORS.dark} />
+          <Ionicons name="chevron-back" size={28} color={COLORS.dark} />
         </TouchableOpacity>
-        <Text style={styles.chatHeaderText}>{activeLessonTitle}</Text>
-        <View style={{width: 40}} />
+        <Text style={styles.chatHeaderText} numberOfLines={1}>{activeLessonTitle}</Text>
+        <View style={{ width: 28 }} />
       </View>
       <FlatList
         ref={flatListRef}
         data={messages}
         style={styles.chatList}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
         keyExtractor={(_, i) => i.toString()}
         renderItem={({ item }) => (
-          <View style={[ styles.message, item.role === "user" ? styles.user : styles.assistant ]}>
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            style={[styles.message, item.role === "user" ? styles.user : styles.assistant]}
+          >
             <Text style={item.role === "user" ? styles.userText : styles.assistantText}>{item.text}</Text>
-          </View>
+          </MotiView>
         )}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -386,8 +456,8 @@ export default function AiTutorScreen() {
       {loading && <ActivityIndicator style={{ marginVertical: 10 }} color={COLORS.primary} />}
       <View style={styles.chatFooter}>
         <TouchableOpacity style={styles.completeButton} onPress={handleCompleteLesson}>
-          <Ionicons name="checkmark-circle-outline" size={22} color={COLORS.white} />
-          <Text style={styles.bigButtonText}>Mark as Complete</Text>
+          <Ionicons name="checkmark-circle" size={24} color={COLORS.white} />
+          <Text style={styles.bigButtonText}>Mark Lesson Complete</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.inputContainer}>
@@ -395,11 +465,11 @@ export default function AiTutorScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Ask a question or practice..."
+          placeholder="Type your answer or question..."
           placeholderTextColor={COLORS.grey}
         />
         <TouchableOpacity style={styles.sendButton} onPress={() => sendMessageToPython(input)} disabled={!input.trim()}>
-          <Ionicons name="arrow-up-circle" size={40} color={!input.trim() ? COLORS.grey : COLORS.primary} />
+          <Ionicons name="send" size={24} color={!input.trim() ? COLORS.grey : COLORS.primary} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -420,71 +490,155 @@ export default function AiTutorScreen() {
 
 // --- StyleSheet ---
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#F5E8C7',   // ✅ same as rest of app
-    paddingTop: 16,                // ✅ add top padding
+  container: {
+    flex: 1,
+    backgroundColor: '#F5E8C7',
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
   },
-  centerContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 20 
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24
   },
-  overviewContainer: { 
-    flex: 1, 
-    backgroundColor: '#F5E8C7',    // ✅ match background
-    paddingTop: 16,                // ✅ top padding
+  centerScrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24
   },
-  overviewHeader: { 
-    paddingHorizontal: 20, 
-    paddingTop: 20, 
-    paddingBottom: 10 
+  overviewContainer: {
+    flex: 1,
+    backgroundColor: '#F5E8C7',
   },
-  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.dark, textAlign: 'center' },
-  subtitle: { fontSize: 16, color: COLORS.dark, textAlign: 'center', marginTop: 8, opacity: 0.7 },
-  loadingText: { marginTop: 10, color: COLORS.dark, fontSize: 16, fontWeight: '500' },
-  cardContainer: { width: '100%', padding: 10, marginTop: 20 },
+  overviewHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 20
+  },
+  title: { fontSize: 24, fontWeight: '800', color: COLORS.dark, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 16, color: '#546E7A', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  loadingText: { marginTop: 12, color: COLORS.dark, fontSize: 16, fontWeight: '600' },
+  cardContainer: { width: '100%', marginBottom: 20 },
 
-  
   // Progress Indicator Styles
-  progressContainer: { marginTop: 15, paddingHorizontal: 10 },
-  progressText: { fontSize: 14, color: COLORS.dark, textAlign: 'center', marginBottom: 8, fontWeight: '500' },
-  progressBar: { height: 8, backgroundColor: '#E0E0E0', borderRadius: 4, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
-  completedText: { fontSize: 14, color: COLORS.success, textAlign: 'center', marginTop: 8, fontWeight: '600' },
-  
-  langCard: { backgroundColor: COLORS.white, padding: 20, borderRadius: 12, borderWidth: 2, borderColor: COLORS.grey, marginBottom: 15, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 3 },
-  langCardSelected: { borderColor: COLORS.primary, backgroundColor: '#FFFBEA' },
+  progressContainer: { marginTop: 10, padding: 16, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16 },
+  progressText: { fontSize: 14, color: COLORS.dark, fontWeight: '600' },
+  progressBar: { height: 10, backgroundColor: '#E0E0E0', borderRadius: 5, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: COLORS.success, borderRadius: 5 },
+  completedText: { fontSize: 14, color: COLORS.success, textAlign: 'center', marginTop: 12, fontWeight: '700' },
+
+  langCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  langCardSelected: { borderColor: COLORS.primary, borderWidth: 2, backgroundColor: '#FFFDF5' },
   langCardText: { fontSize: 18, fontWeight: '600', color: COLORS.dark },
-  lessonCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, padding: 15, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, borderWidth: 1, borderColor: '#EAEAEA' },
-  lessonCardLocked: { backgroundColor: '#F0F0F0' },
-  lessonCardCurrent: { backgroundColor: COLORS.dark },
-  lessonCardTextContainer: { flex: 1, marginLeft: 15 },
-  lessonCardTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.dark },
+  langCardTextSelected: { color: COLORS.primary, fontWeight: '700' },
+
+  lessonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
+  },
+  lessonCardLocked: { backgroundColor: 'rgba(255,255,255,0.6)', shadowOpacity: 0 },
+  lessonCardCurrent: { backgroundColor: COLORS.dark, transform: [{ scale: 1.02 }] },
+
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  lessonCardTextContainer: { flex: 1, marginLeft: 16 },
+  lessonCardTitle: { fontSize: 16, fontWeight: '700', color: COLORS.dark, marginBottom: 4 },
   lessonCardTitleAlt: { color: COLORS.white },
-  lessonCardStatusComplete: { fontSize: 12, color: COLORS.success, fontWeight: '500' },
-  lessonCardStatusCurrent: { fontSize: 12, color: COLORS.white, fontWeight: '500' },
-  lessonCardStatusLocked: { fontSize: 12, color: COLORS.grey },
-  bigButton: { backgroundColor: COLORS.primary, paddingVertical: 15, borderRadius: 12, alignItems: 'center', marginTop: 20, width: '90%' },
-  bigButtonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
-  disabledButton: { backgroundColor: COLORS.grey },
-  resetButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  resetButtonText: { color: COLORS.danger, marginLeft: 5, fontWeight: '600', textDecorationLine: 'underline' },
-  disabledResetButton: { opacity: 0.6 },
-  disabledResetText: { color: COLORS.grey, textDecorationLine: 'none' },
-  completeButton: { backgroundColor: COLORS.success, flexDirection: 'row', gap: 10, paddingVertical: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  chatHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: '#EAEAEA' },
-  chatHeaderText: { fontSize: 20, fontWeight: 'bold', color: COLORS.dark },
-  backButton: { padding: 5 },
-  chatList: { flex: 1, paddingHorizontal: 10 },
-  chatFooter: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: COLORS.light },
-  message: { marginVertical: 5, padding: 12, borderRadius: 18, maxWidth: "85%" },
+  lessonCardStatusComplete: { fontSize: 12, color: COLORS.success, fontWeight: '700', textTransform: 'uppercase' },
+  lessonCardStatusCurrent: { fontSize: 12, color: COLORS.primary, fontWeight: '700', textTransform: 'uppercase' },
+  lessonCardStatusLocked: { fontSize: 12, color: '#90A4AE', fontWeight: '500' },
+
+  bigButton: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+    width: '100%'
+  },
+  bigButtonText: { color: COLORS.dark, fontSize: 18, fontWeight: '700' },
+  disabledButton: { backgroundColor: '#E0E0E0', shadowOpacity: 0 },
+
+  resetButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  resetButtonText: { color: COLORS.danger, marginLeft: 8, fontWeight: '600' },
+  disabledResetButton: { opacity: 0.5 },
+  disabledResetText: { color: COLORS.grey },
+
+  completeButton: {
+    backgroundColor: COLORS.success,
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.success,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4
+  },
+
+  chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0'
+  },
+  chatHeaderText: { fontSize: 18, fontWeight: '700', color: COLORS.dark, flex: 1, textAlign: 'center' },
+  backButton: { padding: 4 },
+  chatList: { flex: 1, paddingHorizontal: 16 },
+  chatFooter: { padding: 16, backgroundColor: COLORS.light },
+
+  message: { marginVertical: 6, padding: 16, borderRadius: 20, maxWidth: "85%" },
   user: { backgroundColor: COLORS.dark, alignSelf: "flex-end", borderBottomRightRadius: 4 },
-  assistant: { backgroundColor: COLORS.white, alignSelf: "flex-start", borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#EAEAEA' },
-  userText: { color: COLORS.white, fontSize: 16, lineHeight: 22 },
-  assistantText: { color: COLORS.dark, fontSize: 16, lineHeight: 22 },
-  inputContainer: { flexDirection: "row", padding: 10, borderTopWidth: 1, borderColor: "#EAEAEA", backgroundColor: COLORS.white, alignItems: 'center' },
-  input: { flex: 1, backgroundColor: '#F0F0F0', borderRadius: 20, paddingVertical: Platform.OS === 'ios' ? 12 : 8, paddingHorizontal: 15, marginRight: 10, fontSize: 16, color: COLORS.dark },
-  sendButton: { justifyContent: "center", alignItems: 'center' },
+  assistant: { backgroundColor: COLORS.white, alignSelf: "flex-start", borderBottomLeftRadius: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  userText: { color: COLORS.white, fontSize: 16, lineHeight: 24 },
+  assistantText: { color: COLORS.dark, fontSize: 16, lineHeight: 24 },
+
+  inputContainer: { flexDirection: "row", padding: 12, backgroundColor: COLORS.white, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F0F0F0' },
+  input: { flex: 1, backgroundColor: '#F8F9FA', borderRadius: 24, paddingVertical: 12, paddingHorizontal: 20, marginRight: 12, fontSize: 16, color: COLORS.dark },
+  sendButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center' },
 });

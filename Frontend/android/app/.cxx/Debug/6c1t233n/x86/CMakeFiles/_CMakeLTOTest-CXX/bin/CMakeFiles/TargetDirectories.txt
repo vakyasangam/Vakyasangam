@@ -1,0 +1,4 @@
+/Users/somesh/Vakyasangam/Frontend/android/app/.cxx/Debug/6c1t233n/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
+/Users/somesh/Vakyasangam/Frontend/android/app/.cxx/Debug/6c1t233n/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
+/Users/somesh/Vakyasangam/Frontend/android/app/.cxx/Debug/6c1t233n/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
+/Users/somesh/Vakyasangam/Frontend/android/app/.cxx/Debug/6c1t233n/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir

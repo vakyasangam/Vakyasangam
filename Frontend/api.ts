@@ -9,7 +9,7 @@ let onUnauthorized: UnauthorizedHandler | null = null;
 export const setApiUnauthorizedHandler = (fn: UnauthorizedHandler) => { onUnauthorized = fn; };
 
 const api = axios.create({
-  baseURL: 'https://vakya-sangham-62l7.onrender.com',
+  baseURL: 'http://localhost:3003',
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
@@ -82,7 +82,7 @@ api.interceptors.response.use(
 
         // Call refresh endpoint
         const res = await axios.post(
-          'https://vakya-sangham-62l7.onrender.com/auth/refresh',
+          'http://localhost:3003/user/auth/refresh',
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' }, timeout: 20000 }
         );

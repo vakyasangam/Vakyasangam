@@ -1,0 +1,1 @@
+/Users/somesh/Vakyasangam/Frontend/android/app/build/intermediates/cxx/Debug/6c1t233n/obj/x86_64
