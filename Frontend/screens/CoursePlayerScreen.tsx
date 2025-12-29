@@ -80,6 +80,13 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
     const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
     const [openModuleIds, setOpenModuleIds] = useState<Set<string>>(new Set());
 
+    // Hide default navigation header
+    useEffect(() => {
+        navigation.setOptions({
+            headerShown: false
+        });
+    }, [navigation]);
+
     useEffect(() => {
         const fetchCourseContent = async () => {
             try {
@@ -426,6 +433,50 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#0F172A'
+    },
+
+    // Custom Header Styles
+    customHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        backgroundColor: '#1E293B',
+        borderBottomWidth: 1,
+        borderBottomColor: '#334155',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    backButton: {
+        padding: 8,
+        marginRight: 12,
+        borderRadius: 8,
+        backgroundColor: '#334155',
+    },
+    headerTitleContainer: {
+        flex: 1,
+        marginRight: 12,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#F1F5F9',
+        letterSpacing: 0.3,
+        marginBottom: 2,
+    },
+    headerSubtitle: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#94A3B8',
+        letterSpacing: 0.2,
+    },
+    headerIconButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#334155',
     },
 
     playerArea: {
