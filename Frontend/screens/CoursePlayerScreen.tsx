@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import Video, { OnVideoErrorData } from 'react-native-video';
 import { WebView } from 'react-native-webview';
+import YoutubePlayer from 'react-native-youtube-iframe';
 import api from '../api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RouteProp } from '@react-navigation/native';
@@ -195,64 +196,27 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
             );
         }
 
-        // YouTube videos - WebView embed
+        // YouTube videos - Using react-native-youtube-iframe
         else if (selectedLesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl))) {
-            const embedUrl = getYouTubeEmbedURL(videoUrl || '');
+            const videoId = getVideoId(videoUrl || '');
             return (
-                <WebView
-                    source={{
-                        html: `
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                <style>
-                                    body, html { margin: 0; padding: 0; background-color: #000; height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; }
-                                    iframe { width: 100%; height: 100%; border: none; }
-                                </style>
-                            </head>
-                            <body>
-                                <iframe
-                                    src="${embedUrl}"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
-                                </iframe>
-                            </body>
-                            </html>
-                        `,
-                        baseUrl: "https://www.youtube.com",
-                        headers: {
-                            "Referer": "https://www.youtube.com/",
-                            "Origin": "https://www.youtube.com"
-                        }
-                    }}
-                    style={styles.videoPlayer}
-                    originWhitelist={['*']}
-                    allowsFullscreenVideo={true}
-                    allowsInlineMediaPlayback={true}
-                    mediaPlaybackRequiresUserAction={false}
-                    javaScriptEnabled={true}
-                    domStorageEnabled={true}
-                    setSupportMultipleWindows={false}
-                    startInLoadingState={true}
-                    renderLoading={() => (
-                        <View style={styles.webViewLoading}>
-                            <ActivityIndicator size="large" color="#FF0000" />
-                            <Text style={styles.loadingText}>Loading YouTube Video...</Text>
-                        </View>
-                    )}
-                    onLoadEnd={() => {
-                        setTimeout(() => markLessonAsComplete(), 5000);
-                    }}
-                    onError={(error) => {
-                        console.error('YouTube WebView Error:', error);
-                    }}
-                    bounces={false}
-                    scrollEnabled={false}
-                    showsHorizontalScrollIndicator={false}
-                    showsVerticalScrollIndicator={false}
-                    userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                />
+                <View style={[styles.videoPlayer, { justifyContent: 'center', backgroundColor: '#000' }]}>
+                    <YoutubePlayer
+                        height={230}
+                        play={true}
+                        videoId={videoId}
+                        onChangeState={(state) => {
+                            if (state === 'ended') {
+                                markLessonAsComplete();
+                            }
+                        }}
+                        webViewProps={{
+                            allowsInlineMediaPlayback: true,
+                            mediaPlaybackRequiresUserAction: false,
+                            originWhitelist: ['*'],
+                        }}
+                    />
+                </View>
             );
         }
 
