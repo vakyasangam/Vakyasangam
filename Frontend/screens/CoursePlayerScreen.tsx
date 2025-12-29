@@ -11,7 +11,8 @@ import {
     LayoutAnimation,
     UIManager,
     Platform,
-    Image
+    Image,
+    Linking
 } from 'react-native';
 import Video, { OnVideoErrorData } from 'react-native-video';
 import { WebView } from 'react-native-webview';
@@ -219,7 +220,6 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             </html>
                         `,
                         baseUrl: "https://www.youtube.com",
-                        headers: { "Referer": "https://www.youtube.com" }
                     }}
                     style={styles.videoPlayer}
                     originWhitelist={['*']}
@@ -240,13 +240,11 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     }}
                     onError={(error) => {
                         console.error('YouTube WebView Error:', error);
-                        Alert.alert("Error", "Failed to load YouTube video.");
                     }}
                     bounces={false}
                     scrollEnabled={false}
                     showsHorizontalScrollIndicator={false}
                     showsVerticalScrollIndicator={false}
-                    userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 />
             );
         }
@@ -545,6 +543,21 @@ const styles = StyleSheet.create({
         color: '#718096',
         marginTop: 2,
         fontStyle: 'italic',
+    },
+    youtubeFallbackBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EDF2F7',
+        gap: 8,
+    },
+    youtubeFallbackText: {
+        fontSize: 14,
+        color: '#2D3748',
+        fontWeight: '600',
     },
 });
 
