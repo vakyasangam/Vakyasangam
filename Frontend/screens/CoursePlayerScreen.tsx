@@ -435,7 +435,11 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                        <ScrollView
+                            style={styles.modalBody}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ paddingBottom: 30 }}
+                        >
                             <Text style={styles.courseInfoTitle}>{course?.title}</Text>
                             <Text style={styles.courseInfoInstructor}>by {course?.instructor?.fullname}</Text>
 
