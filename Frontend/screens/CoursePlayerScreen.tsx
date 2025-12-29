@@ -315,6 +315,21 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                 )}
             </View>
 
+            {/* Fallback for YouTube Restriction (Error 152) */}
+            {selectedLesson && (selectedLesson.lessonType === 'youtube' || (selectedLesson.videoURL && isYouTubeURL(selectedLesson.videoURL || '')) || (selectedLesson.videoUrl && isYouTubeURL(selectedLesson.videoUrl || ''))) && (
+                <TouchableOpacity
+                    style={styles.youtubeFallbackBtn}
+                    onPress={() => {
+                        const url = selectedLesson.videoURL || selectedLesson.videoUrl || '';
+                        if (url) Linking.openURL(url);
+                    }}
+                >
+                    <Ionicons name="logo-youtube" size={20} color="#FF0000" />
+                    <Text style={styles.youtubeFallbackText}>Open in YouTube App (if video fails)</Text>
+                    <Ionicons name="open-outline" size={18} color="#4A5568" />
+                </TouchableOpacity>
+            )}
+
             <ScrollView style={styles.contentContainer}>
                 <View style={styles.headerInfo}>
                     <Text style={styles.lessonTitleHeader}>{selectedLesson?.title || course?.title || 'Course Content'}</Text>
