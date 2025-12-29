@@ -265,6 +265,31 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            {/* Custom Header */}
+            <View style={styles.customHeader}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#F1F5F9" />
+                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle} numberOfLines={1}>
+                        {course?.title || 'Course Player'}
+                    </Text>
+                    <Text style={styles.headerSubtitle}>
+                        {progressInfo.progressPercentage}% Complete • {completedLessons.size}/{progressInfo.totalLessons} Lessons
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.headerIconButton}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="ellipsis-vertical" size={24} color="#F1F5F9" />
+                </TouchableOpacity>
+            </View>
+
             <View style={styles.playerArea}>
                 {selectedLesson ? (
                     getPreviewContent()
