@@ -114,8 +114,14 @@ const CourseScreen = () => {
     }));
   };
 
-  const handleNavigate = (courseId: string, courseTitle: string) => {
-    navigation.navigate('CourseDetail', { courseId, courseTitle });
+  const handleNavigate = (courseId: string, courseTitle: string, isEnrolled: boolean) => {
+    if (isEnrolled) {
+      // Already enrolled - go directly to player
+      navigation.navigate('CoursePlayer' as any, { courseId });
+    } else {
+      // Not enrolled - show course details for enrollment
+      navigation.navigate('CourseDetail', { courseId, courseTitle });
+    }
   };
 
   const renderCourseItem = ({ item }: { item: Course }) => {
@@ -124,7 +130,7 @@ const CourseScreen = () => {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => handleNavigate(item._id, item.title)}
+        onPress={() => handleNavigate(item._id, item.title, isEnrolled)}
       >
         <Image
           source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E8DBC6/4A4135?text=Course' }}
@@ -154,11 +160,11 @@ const CourseScreen = () => {
   };
 
   const languageFilters: FilterCardProps[] = [
-    { label: 'Hindi', value: 'hindi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
-    { label: 'Telugu', value: 'telugu', icon: 'language-outline', isSelected: false, onSelect: () => {} },
-    { label: 'Marathi', value: 'marathi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
-    { label: 'Punjabi', value: 'punjabi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
-    { label: 'Kannada', value: 'kannada', icon: 'language-outline', isSelected: false, onSelect: () => {} },
+    { label: 'Hindi', value: 'hindi', icon: 'language-outline', isSelected: false, onSelect: () => { } },
+    { label: 'Telugu', value: 'telugu', icon: 'language-outline', isSelected: false, onSelect: () => { } },
+    { label: 'Marathi', value: 'marathi', icon: 'language-outline', isSelected: false, onSelect: () => { } },
+    { label: 'Punjabi', value: 'punjabi', icon: 'language-outline', isSelected: false, onSelect: () => { } },
+    { label: 'Kannada', value: 'kannada', icon: 'language-outline', isSelected: false, onSelect: () => { } },
   ];
 
   const renderHeader = () => (
