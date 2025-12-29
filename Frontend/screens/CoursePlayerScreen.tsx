@@ -22,7 +22,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
+    // Suppress warning in New Architecture
+    // UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 // --- Type Definitions ---
@@ -217,7 +218,8 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             </body>
                             </html>
                         `,
-                        baseUrl: "https://www.youtube.com"
+                        baseUrl: "https://www.youtube.com",
+                        headers: { "Referer": "https://www.youtube.com" }
                     }}
                     style={styles.videoPlayer}
                     originWhitelist={['*']}
@@ -244,6 +246,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                     scrollEnabled={false}
                     showsHorizontalScrollIndicator={false}
                     showsVerticalScrollIndicator={false}
+                    userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 />
             );
         }
