@@ -436,7 +436,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                         </View>
 
                         <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                            <Text style={styles.courseInfoTitle} numberOfLines={3}>{course?.title}</Text>
+                            <Text style={styles.courseInfoTitle}>{course?.title}</Text>
                             <Text style={styles.courseInfoInstructor}>by {course?.instructor?.fullname}</Text>
 
                             <View style={styles.infoSection}>
@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
         color: '#F1F5F9',
         marginBottom: 8,
         lineHeight: 28,
-        flexWrap: 'wrap',
+        flexShrink: 1,
     },
     courseInfoInstructor: {
         fontSize: 14,
@@ -847,6 +847,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#CBD5E1',
         lineHeight: 22,
+        flexShrink: 1,
     },
 });
 
