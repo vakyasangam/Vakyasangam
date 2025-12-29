@@ -435,8 +435,8 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView style={styles.modalBody}>
-                            <Text style={styles.courseInfoTitle}>{course?.title}</Text>
+                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                            <Text style={styles.courseInfoTitle} numberOfLines={3}>{course?.title}</Text>
                             <Text style={styles.courseInfoInstructor}>by {course?.instructor?.fullname}</Text>
 
                             <View style={styles.infoSection}>
@@ -797,15 +797,17 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     courseInfoTitle: {
-        fontSize: 22,
-        fontWeight: '800',
+        fontSize: 20,
+        fontWeight: '700',
         color: '#F1F5F9',
         marginBottom: 8,
+        lineHeight: 28,
+        flexWrap: 'wrap',
     },
     courseInfoInstructor: {
-        fontSize: 15,
+        fontSize: 14,
         color: '#94A3B8',
-        marginBottom: 24,
+        marginBottom: 20,
     },
     infoSection: {
         backgroundColor: '#334155',
