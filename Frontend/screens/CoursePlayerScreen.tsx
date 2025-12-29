@@ -54,10 +54,9 @@ const isNPTELURL = (url: string): boolean => {
     return url.includes('nptel.ac.in');
 };
 
-const getYouTubeEmbedURL = (url: string): string => {
+const getVideoId = (url: string): string => {
     try {
         let videoId = '';
-
         if (url.includes('youtube.com/watch?v=')) {
             videoId = url.split('v=')[1]?.split('&')[0];
         } else if (url.includes('youtu.be/')) {
@@ -65,11 +64,8 @@ const getYouTubeEmbedURL = (url: string): string => {
         } else if (url.includes('youtube.com/embed/')) {
             videoId = url.split('embed/')[1]?.split('?')[0];
         }
-
-        // Use nocookie domain + force origin param
-        return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1&origin=https://www.youtube.com` : '';
+        return videoId || '';
     } catch (error) {
-        console.error('Error creating YouTube embed URL:', error);
         return '';
     }
 };
@@ -205,7 +201,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                         height={230}
                         play={true}
                         videoId={videoId}
-                        onChangeState={(state) => {
+                        onChangeState={(state: string) => {
                             if (state === 'ended') {
                                 markLessonAsComplete();
                             }
