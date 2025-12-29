@@ -1,6 +1,6 @@
 import express from 'express';
-import { 
-    createCourse, 
+import {
+    createCourse,
     getAllCourses,
     getFeaturedCourses,
     getCourseById,
@@ -9,13 +9,15 @@ import {
     createCourseReview,
     addModuleToCourse,
     addLessonToModule,
-    getCourseContent
+    getCourseContent,
+    deleteModuleFromCourse,
+    deleteLessonFromModule
 } from '../controller/coursecontroller.js';
 import { isEnrolled } from '../middleware/isEnrolled.js';
 import { verifyUser } from '../middleware/protect.js';
 import { isTeacherOrAdmin } from '../middleware/check.js';
 // ✅ BADLAV 1: Yahan 'upload' ko 'multr.js' se import kiya hai.
-import { upload } from '../middleware/multr.js'; 
+import { upload } from '../middleware/multr.js';
 import singleUpload from '../middleware/multe.js';
 
 const router = express.Router();
@@ -35,12 +37,15 @@ router.post('/:courseId/modules', verifyUser, isTeacherOrAdmin, addModuleToCours
 
 // ✅ BADLAV 2: 'upload.single('video')' ko 'upload.single('pdf')' se badal diya hai
 router.post(
-    '/:courseId/modules/:moduleId/lessons', 
-    verifyUser, 
-    isTeacherOrAdmin, 
+    '/:courseId/modules/:moduleId/lessons',
+    verifyUser,
+    isTeacherOrAdmin,
     upload.single('pdf'), // <<< YAHI ASLI CHANGE HAI
     addLessonToModule
 );
+
+router.delete('/:courseId/modules/:moduleId', verifyUser, isTeacherOrAdmin, deleteModuleFromCourse);
+router.delete('/:courseId/modules/:moduleId/lessons/:lessonId', verifyUser, isTeacherOrAdmin, deleteLessonFromModule);
 
 // --- Must be LAST so it doesn’t conflict ---
 router.get('/:id', getCourseById);

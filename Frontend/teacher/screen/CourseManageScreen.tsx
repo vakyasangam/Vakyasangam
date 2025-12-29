@@ -36,8 +36,8 @@ const CourseManageScreen = () => {
     useEffect(() => {
         const requestPermissions = async () => {
             if (Platform.OS === 'android') {
-                const permission = Platform.Version >= 33 
-                    ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO 
+                const permission = Platform.Version >= 33
+                    ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO
                     : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
                 const granted = await PermissionsAndroid.request(permission);
                 if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
@@ -67,26 +67,26 @@ const CourseManageScreen = () => {
     );
 
     // ======= Add Module =======
- const handleAddModule = async () => {
-    console.log("Add Module pressed");
-    if (!moduleTitle.trim()) {
-        Alert.alert("Error", "Module title required");
-        return;
-    }
-    setIsSaving(true);
-    try {
-        const res = await api.post(`/api/${courseId}/modules`, { title: moduleTitle });
-        console.log("Response:", res.data);
-        setCourse(res.data.course);
-        setModuleTitle('');
-        setModuleModalVisible(false);
-    } catch (error) {
-        console.error("Add Module Error:", error);
-        Alert.alert("Error", "Failed to add module");
-    } finally {
-        setIsSaving(false);
-    }
-};
+    const handleAddModule = async () => {
+        console.log("Add Module pressed");
+        if (!moduleTitle.trim()) {
+            Alert.alert("Error", "Module title required");
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const res = await api.post(`/api/${courseId}/modules`, { title: moduleTitle });
+            console.log("Response:", res.data);
+            setCourse(res.data.course);
+            setModuleTitle('');
+            setModuleModalVisible(false);
+        } catch (error) {
+            console.error("Add Module Error:", error);
+            Alert.alert("Error", "Failed to add module");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
 
     // ======= Pick PDF =======
@@ -156,6 +156,56 @@ const CourseManageScreen = () => {
         }
     };
 
+    // ======= Delete Module =======
+    const handleDeleteModule = (moduleId: string, moduleTitle: string) => {
+        Alert.alert(
+            "Delete Module",
+            `Are you sure you want to delete "${moduleTitle}"? All lessons in this module will be deleted.`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const res = await api.delete(`/api/${courseId}/modules/${moduleId}`);
+                            setCourse(res.data.course);
+                            Alert.alert("Success", "Module deleted successfully.");
+                        } catch (error) {
+                            console.error("Delete Module Error:", error);
+                            Alert.alert("Error", "Failed to delete module.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // ======= Delete Lesson =======
+    const handleDeleteLesson = (moduleId: string, lessonId: string, lessonTitle: string) => {
+        Alert.alert(
+            "Delete Lesson",
+            `Are you sure you want to delete "${lessonTitle}"?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const res = await api.delete(`/api/${courseId}/modules/${moduleId}/lessons/${lessonId}`);
+                            setCourse(res.data.course);
+                            Alert.alert("Success", "Lesson deleted successfully.");
+                        } catch (error) {
+                            console.error("Delete Lesson Error:", error);
+                            Alert.alert("Error", "Failed to delete lesson.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     if (loading) return <View style={styles.loaderContainer}><ActivityIndicator size="large" color="#FFA500" /></View>;
 
     return (
@@ -166,12 +216,20 @@ const CourseManageScreen = () => {
 
                 {course?.modules?.map((module) => (
                     <View key={module._id} style={styles.moduleContainer}>
-                        <Text style={styles.moduleTitle}>{module.title}</Text>
+                        <View style={styles.moduleTitleRow}>
+                            <Text style={styles.moduleTitle}>{module.title}</Text>
+                            <TouchableOpacity onPress={() => handleDeleteModule(module._id, module.title)}>
+                                <Ionicons name="trash-outline" size={22} color="#D32F2F" />
+                            </TouchableOpacity>
+                        </View>
                         {module.lessons.map((lesson, idx) => (
                             <View key={lesson._id} style={styles.lessonItem}>
                                 <Text style={styles.lessonNumber}>{idx + 1}.</Text>
                                 <Ionicons name={lesson.lessonType === 'pdf' ? 'document-text-outline' : 'logo-youtube'} size={20} color={lesson.lessonType === 'pdf' ? '#D32F2F' : '#c4302b'} />
                                 <Text style={styles.lessonTitle} numberOfLines={1}>{lesson.title}</Text>
+                                <TouchableOpacity onPress={() => handleDeleteLesson(module._id, lesson._id, lesson.title)}>
+                                    <Ionicons name="trash-outline" size={18} color="#D32F2F" />
+                                </TouchableOpacity>
                             </View>
                         ))}
                         <TouchableOpacity style={styles.addButtonSmall} onPress={() => { setSelectedModuleId(module._id); setLessonModalVisible(true); }}>
@@ -259,7 +317,8 @@ const styles = StyleSheet.create({
     courseTitle: { fontSize: 24, fontWeight: 'bold', padding: 20, textAlign: 'center', color: '#333' },
     sectionTitle: { fontSize: 20, fontWeight: 'bold', marginHorizontal: 20, marginBottom: 10 },
     moduleContainer: { backgroundColor: 'white', marginHorizontal: 15, marginVertical: 8, borderRadius: 12, padding: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-    moduleTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
+    moduleTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
+    moduleTitle: { fontSize: 18, fontWeight: '600', flex: 1 },
     lessonItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, marginLeft: 10 },
     lessonNumber: { marginRight: 10, color: '#888', fontSize: 16 },
     lessonTitle: { marginLeft: 10, fontSize: 16, color: '#333', flex: 1 },

@@ -56,17 +56,17 @@ export const createCourse = async (req, res) => {
             message: "Course created successfully.",
             course: newCourse
         });
- } catch (error) {
-    // Log the full error response from the server
-    if (error.response) {
-        console.error("Server Error Response:", JSON.stringify(error.response.data, null, 2));
-    } else {
-        console.error("Failed to save course:", error);
-    }
+    } catch (error) {
+        // Log the full error response from the server
+        if (error.response) {
+            console.error("Server Error Response:", JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error("Failed to save course:", error);
+        }
 
-    const message = error.response?.data?.message || "Could not save the course.";
-    Alert.alert("Error", message);
-}
+        const message = error.response?.data?.message || "Could not save the course.";
+        Alert.alert("Error", message);
+    }
 };
 
 // ========== GET: Get all courses with filtering ==========
@@ -76,25 +76,25 @@ export const createCourse = async (req, res) => {
 
 // ========== GET: Get all courses with filtering ==========
 export const getAllCourses = async (req, res) => {
-    try {
-        const { q, language, level, category } = req.query;
+    try {
+        const { q, language, level, category } = req.query;
 
-        const query = {};
-        if (req.user?.role !== 'admin') query.isPublished = true;
+        const query = {};
+        if (req.user?.role !== 'admin') query.isPublished = true;
 
         // ✅ IMPROVEMENT: Changed regex to find the query anywhere in the title, not just at the start.
-        if (q) query.title = { $regex: q, $options: 'i' }; 
+        if (q) query.title = { $regex: q, $options: 'i' };
 
-        if (language) query.language = { $regex: `^${language}$`, $options: 'i' };
-        if (level) query.level = level;
-        if (category) query.category = category;
+        if (language) query.language = { $regex: `^${language}$`, $options: 'i' };
+        if (level) query.level = level;
+        if (category) query.category = category;
 
-        const courses = await Course.find(query).populate('instructor', 'fullname');
-        res.status(200).json({ success: true, courses });
-    } catch (error) {
-        console.error("🔥 Get All Courses Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
-    }
+        const courses = await Course.find(query).populate('instructor', 'fullname');
+        res.status(200).json({ success: true, courses });
+    } catch (error) {
+        console.error("🔥 Get All Courses Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
 };
 
 
@@ -140,7 +140,7 @@ export const getCourseContent = async (req, res) => {
 
         // Course ki details fetch karein
         const course = await Course.findById(courseId)
-            .populate('instructor', 'fullname'); 
+            .populate('instructor', 'fullname');
 
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found.' });
@@ -150,7 +150,7 @@ export const getCourseContent = async (req, res) => {
         const userProgress = await UserProgress.findOne({ user: userId, course: courseId });
 
         // Course aur progress, dono ko response mein bhejein
-        res.status(200).json({ 
+        res.status(200).json({
             success: true,
             course,
             userProgress // Agar progress nahi hai to yeh 'null' hoga
@@ -171,7 +171,7 @@ export const updateCourse = async (req, res) => {
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
-        
+
         const updateData = { ...req.body };
 
         // --- Naya Code Start Hua ---
@@ -186,7 +186,7 @@ export const updateCourse = async (req, res) => {
             });
             // Update data mein naya URL add karein
             updateData.thumbnailURL = result.secure_url;
-             console.log("Thumbnail updated successfully:", updateData.thumbnailURL);
+            console.log("Thumbnail updated successfully:", updateData.thumbnailURL);
         }
         // --- Naya Code Yahan Tak ---
 
@@ -308,13 +308,13 @@ export const addModuleToCourse = async (req, res) => {
 export const addLessonToModule = async (req, res) => {
     try {
         const { courseId, moduleId } = req.params;
-     
+
         const { title, duration, lessonType, videoUrl } = req.body;
 
         if (!title || !duration || !lessonType) {
             return res.status(400).json({ success: false, message: 'Title, duration, and lesson type are required.' });
         }
-        
+
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found.' });
@@ -354,7 +354,7 @@ export const addLessonToModule = async (req, res) => {
                 format: 'pdf'
             });
             console.log("PDF Upload successful!");
-            
+
             newLesson.pdfUrl = cloudinaryResult.secure_url;
             newLesson.pdfOriginalName = req.file.originalname;
 
@@ -369,6 +369,75 @@ export const addLessonToModule = async (req, res) => {
 
     } catch (error) {
         console.error("🔥 Add Lesson Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+// ========== DELETE: Remove a module from course ==========
+export const deleteModuleFromCourse = async (req, res) => {
+    try {
+        const { courseId, moduleId } = req.params;
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
+        }
+
+        // Authorization check
+        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        // Find and remove module
+        const module = course.modules.id(moduleId);
+        if (!module) {
+            return res.status(404).json({ success: false, message: 'Module not found.' });
+        }
+
+        module.deleteOne();
+        await course.save();
+
+        res.status(200).json({ success: true, message: 'Module deleted successfully.', course });
+
+    } catch (error) {
+        console.error("🔥 Delete Module Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+// ========== DELETE: Remove a lesson from module ==========
+export const deleteLessonFromModule = async (req, res) => {
+    try {
+        const { courseId, moduleId, lessonId } = req.params;
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
+        }
+
+        // Authorization check
+        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        const module = course.modules.id(moduleId);
+        if (!module) {
+            return res.status(404).json({ success: false, message: 'Module not found.' });
+        }
+
+        // Find and remove lesson
+        const lesson = module.lessons.id(lessonId);
+        if (!lesson) {
+            return res.status(404).json({ success: false, message: 'Lesson not found.' });
+        }
+
+        lesson.deleteOne();
+        await course.save();
+
+        res.status(200).json({ success: true, message: 'Lesson deleted successfully.', course });
+
+    } catch (error) {
+        console.error("🔥 Delete Lesson Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
