@@ -1,6 +1,6 @@
 // src/screens/ForgotPasswordScreen.tsx
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Linking } from 'react-native';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types'; // Make sure this path is correct
@@ -15,48 +15,18 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const { colors } = useTheme();
 
-  const handleSendResetLink = () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address.');
-      return;
-    }
+  const handleSendResetLink = async () => {
+    // Open the web page for password reset
+    const resetUrl = 'https://vakyasangam-backend.onrender.com/user/auth/forgot-password-page';
 
-    // ✅ Step 1: API call se pehle confirmation alert dikhao
-    Alert.alert(
-      "Confirm Reset", // Alert ka Title
-      "Are you sure you want to reset your password?", // Alert ka Message
-      [
-        // Button #1: Cancel
-        {
-          text: "Cancel",
-          onPress: () => console.log("Password reset cancelled"),
-          style: "cancel"
-        },
-        // Button #2: Yes, Send Link
-        { 
-          text: "Yes, Send Link", 
-          onPress: async () => {
-            // ✅ Step 2: User ke 'Yes' bolne par hi API call karo
-            setLoading(true);
-            try {
-              await api.post('/user/auth/forgot-password', { email: email.trim().toLowerCase() });
-              
-              // ✅ Step 3: API call ke baad success alert dikhao
-              Alert.alert(
-                'Link Sent!',
-                'A password reset link has been sent to your mail.'
-              );
-              navigation.goBack();
-            } catch (error: any) {
-              const message = error.response?.data?.message || 'Something went wrong.';
-              Alert.alert('Error', message);
-            } finally {
-              setLoading(false);
-            }
-          } 
-        }
-      ]
-    );
+    // Check if the link can be opened
+    const supported = await Linking.canOpenURL(resetUrl);
+
+    if (supported) {
+      await Linking.openURL(resetUrl);
+    } else {
+      Alert.alert("Error", `Don't know how to open this URL: ${resetUrl}`);
+    }
   };
 
   return (
