@@ -73,6 +73,11 @@ app.use(morgan('combined', {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------- 📄 Serve Reset Password Page -------------------
+// ------------------- 📄 Serve Reset Password Page -------------------
+app.get('/user/auth/forgot-password-page', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
+});
+
 app.get('/user/auth/reset-password/:token', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
 });
