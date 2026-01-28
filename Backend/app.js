@@ -84,7 +84,13 @@ app.get('/debug-path', (req, res) => {
       publicPath: path.join(__dirname, 'public'),
       targetFile: filePath,
       fileExists: exists,
-      filesInPublic: fs.existsSync(path.join(__dirname, 'public')) ? fs.readdirSync(path.join(__dirname, 'public')) : 'Public folder missing'
+      filesInPublic: fs.existsSync(path.join(__dirname, 'public')) ? fs.readdirSync(path.join(__dirname, 'public')) : 'Public folder missing',
+      envConfig: {
+        MAIL_USER_SET: !!process.env.MAIL_USER,
+        MAIL_PASS_SET: !!process.env.MAIL_PASS,
+        MONGO_URI_SET: !!process.env.MONGO_URI,
+        RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL || 'Not Set'
+      }
     });
   });
 });
