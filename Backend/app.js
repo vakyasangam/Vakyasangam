@@ -88,6 +88,8 @@ app.get('/debug-path', (req, res) => {
       envConfig: {
         MAIL_USER_SET: !!process.env.MAIL_USER,
         MAIL_PASS_SET: !!process.env.MAIL_PASS,
+        SMTP_HOST: process.env.SMTP_HOST || 'Default(Gmail)',
+        SMTP_PORT: process.env.SMTP_PORT || 'Default(587)',
         MONGO_URI_SET: !!process.env.MONGO_URI,
         RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL || 'Not Set'
       }

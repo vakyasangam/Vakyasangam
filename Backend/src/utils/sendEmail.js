@@ -7,9 +7,9 @@ dotenv.config();
 export const sendMail = async ({ to, subject, html }) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // true for 465, false for other ports
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_PORT == 465, // true if port is 465
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
