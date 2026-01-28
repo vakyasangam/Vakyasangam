@@ -39,6 +39,9 @@ import './src/config/passport.js'; // ⬅️ Passport config must be loaded befo
 
 const app = express();
 
+// ------------------- ☁️ Trust Proxy for Render -------------------
+app.set('trust proxy', 1); // Required for rate-limit on Render/Heroku
+
 // ------------------- ⚒️ Middleware Setup -------------------
 
 
