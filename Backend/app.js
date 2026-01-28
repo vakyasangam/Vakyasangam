@@ -74,6 +74,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------- 📄 Serve Reset Password Page -------------------
 // ------------------- 📄 Serve Reset Password Page -------------------
+// ------------------- 📄 Serve Reset Password Page -------------------
+app.get('/debug-path', (req, res) => {
+  import('fs').then(fs => {
+    const filePath = path.join(__dirname, 'public', 'forgot-password.html');
+    const exists = fs.existsSync(filePath);
+    res.json({
+      __dirname,
+      publicPath: path.join(__dirname, 'public'),
+      targetFile: filePath,
+      fileExists: exists,
+      filesInPublic: fs.existsSync(path.join(__dirname, 'public')) ? fs.readdirSync(path.join(__dirname, 'public')) : 'Public folder missing'
+    });
+  });
+});
+
 app.get('/user/auth/forgot-password-page', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
 });
