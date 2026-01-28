@@ -215,6 +215,11 @@ export const forgotPassword = async (req, res) => {
     const clientUrl = process.env.CLIENT_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3003';
     const resetUrl = `${clientUrl}/user/auth/reset-password/${resetToken}`;
 
+    // 🛠️ FALLBACK LOG: If email fails, use this link from Render Logs
+    console.log("\n========================================================");
+    console.log("🔗 MANUAL RESET LINK:", resetUrl);
+    console.log("========================================================\n");
+
     await sendMail({
       to: user.email,
       subject: "🔐 Reset Your Password - Vakya Sangham",
