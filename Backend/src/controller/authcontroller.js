@@ -11,20 +11,20 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ✅ Signup Controller
 export const signup = async (req, res) => {
- const { fullname, email, password, phone, referralCode } = req.body;
+  const { fullname, email, password, phone, referralCode } = req.body;
 
 
   try {
-    if (!fullname || !email || !password || !phone ) {
+    if (!fullname || !email || !password || !phone) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-if (!passwordRegex.test(password)) {
-  return res.status(400).json({
-    message: "Password must include uppercase, lowercase, number & special character.",
-  });
-}
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message: "Password must include uppercase, lowercase, number & special character.",
+      });
+    }
 
 
     const existingUser = await User.findOne({ email });
@@ -40,17 +40,17 @@ if (!passwordRegex.test(password)) {
       email,
       password: hashedPassword,
       phoneNumber: phone,
-  referralCode: referralCode || null,
+      referralCode: referralCode || null,
       isVerified: false,
     });
 
     await newUser.save();
     await redisClient.setEx(`otp:${email}`, 600, otp); // 10 minutes
 
-   await sendMail({
-  to: email,
-  subject: "🔐 Email Verification - Vakya Sangham",
-  html: `
+    await sendMail({
+      to: email,
+      subject: "🔐 Email Verification - Vakya Sangham",
+      html: `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333;">
       <h2>🔐 Verify Your Email - Vakya Sangham</h2>
 
@@ -75,7 +75,7 @@ if (!passwordRegex.test(password)) {
       <small style="color: #888;">Helping India connect through language. Securely and simply.</small>
     </div>
   `
-});
+    });
 
 
     res.status(200).json({
@@ -118,7 +118,7 @@ export const verifyOTP = async (req, res) => {
     await redisClient.del(`otp:${normalizedEmail}`);
 
     // UPDATED: Assume generatetoken returns the token string
-    const token = generatetoken(user._id, res); 
+    const token = generatetoken(user._id, res);
 
     // UPDATED: Send back a complete user object and the token in the body
     res.status(200).json({
@@ -161,18 +161,18 @@ export const login = async (req, res) => {
     }
 
     // generatetoken(user._id, res);
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
     res.status(200).json({
       message: "Login successful.",
-       token: token,
+      token: token,
       user: {
-         fullname: user.fullname,
+        fullname: user.fullname,
         email: user.email,
-         role: user.role, 
+        role: user.role,
         isOnboarded: user.isOnboarded,
-         profileImageURL: user.profileImageURL
+        profileImageURL: user.profileImageURL
       },
     });
   } catch (error) {
@@ -212,12 +212,13 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    const resetUrl = `${process.env.CLIENT_URL}/user/auth/reset-password/${resetToken}`;
+    const clientUrl = process.env.CLIENT_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3003';
+    const resetUrl = `${clientUrl}/user/auth/reset-password/${resetToken}`;
 
-await sendMail({
-  to: user.email,
-  subject: "🔐 Reset Your Password - Vakya Sangham",
-  html: `
+    await sendMail({
+      to: user.email,
+      subject: "🔐 Reset Your Password - Vakya Sangham",
+      html: `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333;">
       <h2>🔐 Vakya Sangham — Password Reset Request</h2>
 
@@ -241,7 +242,7 @@ await sendMail({
       <small style="color: #888;">Ensuring language learning for every region with security & care.</small>
     </div>
   `
-});
+    });
 
     // console.log("CLIENT_URL =>", process.env.CLIENT_URL);
 
@@ -294,9 +295,9 @@ export const resendOTP = async (req, res) => {
     await redisClient.setEx(`otp:${email}`, 600, otp);
 
     await sendMail({
-  to: email,
-  subject: "🔄 Your New OTP for Vakya Sangham Account Verification",
-  html: `
+      to: email,
+      subject: "🔄 Your New OTP for Vakya Sangham Account Verification",
+      html: `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333;">
       <h2>🔐 Vakya Sangham — Secure Your Account</h2>
       <p>Hi there,</p>
@@ -316,7 +317,7 @@ export const resendOTP = async (req, res) => {
       <small style="color: #888;">Empowering regional language learning for everyone.</small>
     </div>
   `
-});
+    });
 
 
     res.status(200).json({ message: "OTP resent successfully." });
@@ -416,7 +417,7 @@ export const googleLogin = async (req, res) => {
           isVerified: true,
           authProvider: "google",
           isOnboarded: false,
-           // ✅ Fix: must be false initially
+          // ✅ Fix: must be false initially
         });
         await user.save();
       }
