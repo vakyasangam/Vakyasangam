@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: vakyasangam-backend
+    runtime: node
+    buildCommand: cd Backend && npm install
+    startCommand: cd Backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    proPlan: false
