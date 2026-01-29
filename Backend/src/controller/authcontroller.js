@@ -220,7 +220,16 @@ export const forgotPassword = async (req, res) => {
     console.log("🔗 MANUAL RESET LINK:", resetUrl);
     console.log("========================================================\n");
 
-    await sendMail({
+    // ✅ IMMEDIATE RESPONSE: Don't wait for email (it causes timeout blocks)
+    // ⚠️ ERROR BYPASS: Sending Link to Frontend directly
+    res.status(200).json({
+      success: true,
+      message: "Reset link generated!",
+      resetUrl: resetUrl
+    });
+
+    // 📧 Background Email Send (Non-blocking)
+    sendMail({
       to: user.email,
       subject: "🔐 Reset Your Password - Vakya Sangham",
       html: `
@@ -247,16 +256,7 @@ export const forgotPassword = async (req, res) => {
       <small style="color: #888;">Ensuring language learning for every region with security & care.</small>
     </div>
   `
-    });
-
-    // console.log("CLIENT_URL =>", process.env.CLIENT_URL);
-    // ✅ SUCCESS: Email Sent (or Logged)
-    res.status(200).json({
-      success: true,
-      message: "Reset link generated!",
-      // ⚠️ ERROR BYPASS: Sending Link to Frontend directly for users where Email is blocked
-      resetUrl: resetUrl
-    });
+    }).catch(err => console.error("Background Email Failed:", err.message));
   } catch (error) {
     console.error("❌ Forgot Password Error:", error.message);
     res.status(500).json({ message: "Failed to send reset email." });
