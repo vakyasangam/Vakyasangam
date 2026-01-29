@@ -250,8 +250,13 @@ export const forgotPassword = async (req, res) => {
     });
 
     // console.log("CLIENT_URL =>", process.env.CLIENT_URL);
-
-    res.status(200).json({ message: "Reset link sent to email" });
+    // ✅ SUCCESS: Email Sent (or Logged)
+    res.status(200).json({
+      success: true,
+      message: "Reset link generated!",
+      // ⚠️ ERROR BYPASS: Sending Link to Frontend directly for users where Email is blocked
+      resetUrl: resetUrl
+    });
   } catch (error) {
     console.error("❌ Forgot Password Error:", error.message);
     res.status(500).json({ message: "Failed to send reset email." });
