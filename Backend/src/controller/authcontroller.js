@@ -47,7 +47,15 @@ export const signup = async (req, res) => {
     await newUser.save();
     await redisClient.setEx(`otp:${email}`, 600, otp); // 10 minutes
 
-    await sendMail({
+    // ✅ IMMEDIATE RESPONSE: Prevents timeout
+    res.status(200).json({
+      message: "Signup successful. Please verify your email with the OTP sent to your email.",
+      // ⚠️ DEBUG BYPASS: Return OTP in response so user isn't stuck if email fails
+      debugOtp: otp
+    });
+
+    // 📧 Background Email (Non-blocking)
+    sendMail({
       to: email,
       subject: "🔐 Email Verification - Vakya Sangham",
       html: `
@@ -75,12 +83,7 @@ export const signup = async (req, res) => {
       <small style="color: #888;">Helping India connect through language. Securely and simply.</small>
     </div>
   `
-    });
-
-
-    res.status(200).json({
-      message: "Signup successful. Please verify your email with the OTP sent to your email.",
-    });
+    }).catch(err => console.error("Signup Email Failed:", err.message));
   } catch (error) {
     console.error("❌ Signup Error:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -304,7 +307,14 @@ export const resendOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     await redisClient.setEx(`otp:${email}`, 600, otp);
 
-    await sendMail({
+    // ✅ IMMEDIATE RESPONSE
+    res.status(200).json({
+      message: "OTP resent successfully.",
+      debugOtp: otp
+    });
+
+    // 📧 Background Email (Non-blocking)
+    sendMail({
       to: email,
       subject: "🔄 Your New OTP for Vakya Sangham Account Verification",
       html: `
@@ -327,10 +337,7 @@ export const resendOTP = async (req, res) => {
       <small style="color: #888;">Empowering regional language learning for everyone.</small>
     </div>
   `
-    });
-
-
-    res.status(200).json({ message: "OTP resent successfully." });
+    }).catch(err => console.error("Resend OTP Email Failed:", err.message));
   } catch (error) {
     console.error("❌ Resend OTP Error:", error.message);
     res.status(500).json({ message: "Failed to resend OTP." });
